@@ -112,34 +112,6 @@
           if (text) console.error('[post-exception status] ' + text);
         };
       };
-      // Template: auto-load FPS arena (RomanArenaNew) after control room — defensive, no throw if not found
-      (function(){
-        var tries=0;
-        function tryLoad(){
-          tries++;
-          try{
-            if(typeof FlaxEngine!=='undefined' && FlaxEngine.Level && FlaxEngine.Level.LoadScene){
-              console.log('[web-template] FlaxEngine.Level.LoadScene RomanArenaNew');
-              try{ FlaxEngine.Level.LoadScene('RomanArenaNew'); }catch(e){}
-              try{ FlaxEngine.Level.LoadScene('Content/Scenes/RomanArenaNew.scene'); }catch(e){}
-              return;
-            }
-          }catch(e){ console.log('FlaxEngine load failed',e); }
-          try{
-            if(typeof Module!=='undefined' && Module.cwrap){
-              var load = Module.cwrap('LoadScene', null, ['string']);
-              if(load){ try{ load('RomanArenaNew'); console.log('cwrap RomanArenaNew'); }catch(e){} return; }
-            }
-          }catch(e){}
-          if(tries<10) setTimeout(tryLoad, 2000);
-        }
-        var orig = Module['onRuntimeInitialized'];
-        Module['onRuntimeInitialized'] = function(){
-          if(orig) try{ orig(); }catch(e){}
-          console.log('[web-template] Runtime ready, will try arena in 2s');
-          setTimeout(tryLoad, 2000);
-        };
-      })();
     </script>
     <script async type="text/javascript" src="FlaxGame.js"></script>
   </body>
