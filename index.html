@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Roman Arena — FPS Spear (Web Preview)</title>
+    <title>Roman Arena ΓÇö FPS Spear (Web Preview)</title>
     <style>
       body { margin: 0; }
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
@@ -46,7 +46,7 @@
     </style>
   </head>
   <body>
-    <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>Roman Arena — FPS Spear (Web Preview)</strong><br><small style="color:#888">WASD + mouse + left-click spear — Full physics needs Windows build (C# stripped on Web). This Web preview shows arena geometry.</small></center></figure>
+    <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>Roman Arena ΓÇö FPS Spear (Web Preview)</strong><br><small style="color:#888">WASD + mouse + left-click spear ΓÇö Full physics needs Windows build (C# stripped on Web). This Web preview shows arena geometry.</small></center></figure>
     <div class="emscripten" id="status">Loading...</div>
     <div class="emscripten">
       <progress value="0" max="100" id="progress" hidden=1></progress>
@@ -112,31 +112,32 @@
           if (text) console.error('[post-exception status] ' + text);
         };
       };
-      // FPS arena auto-load — show RomanArenaNew not control room default
+      // Template: auto-load FPS arena (RomanArenaNew) after control room — defensive, no throw if not found
       (function(){
         var tries=0;
         function tryLoad(){
           tries++;
           try{
             if(typeof FlaxEngine!=='undefined' && FlaxEngine.Level && FlaxEngine.Level.LoadScene){
-              console.log('[Web Arena] Loading RomanArenaNew via FlaxEngine');
-              FlaxEngine.Level.LoadScene('RomanArenaNew');
-              FlaxEngine.Level.LoadScene('Content/Scenes/RomanArenaNew.scene');
+              console.log('[web-template] FlaxEngine.Level.LoadScene RomanArenaNew');
+              try{ FlaxEngine.Level.LoadScene('RomanArenaNew'); }catch(e){}
+              try{ FlaxEngine.Level.LoadScene('Content/Scenes/RomanArenaNew.scene'); }catch(e){}
               return;
             }
           }catch(e){ console.log('FlaxEngine load failed',e); }
           try{
             if(typeof Module!=='undefined' && Module.cwrap){
               var load = Module.cwrap('LoadScene', null, ['string']);
-              if(load){ load('RomanArenaNew'); console.log('[Web Arena] cwrap RomanArenaNew'); return; }
+              if(load){ try{ load('RomanArenaNew'); console.log('cwrap RomanArenaNew'); }catch(e){} return; }
             }
           }catch(e){}
-          if(tries<30) setTimeout(tryLoad, 1000);
+          if(tries<10) setTimeout(tryLoad, 2000);
         }
         var orig = Module['onRuntimeInitialized'];
         Module['onRuntimeInitialized'] = function(){
           if(orig) try{ orig(); }catch(e){}
-          setTimeout(tryLoad, 1500);
+          console.log('[web-template] Runtime ready, will try arena in 2s');
+          setTimeout(tryLoad, 2000);
         };
       })();
     </script>
