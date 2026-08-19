@@ -112,6 +112,33 @@
           if (text) console.error('[post-exception status] ' + text);
         };
       };
+      // FPS arena auto-load — show RomanArenaNew not control room default
+      (function(){
+        var tries=0;
+        function tryLoad(){
+          tries++;
+          try{
+            if(typeof FlaxEngine!=='undefined' && FlaxEngine.Level && FlaxEngine.Level.LoadScene){
+              console.log('[Web Arena] Loading RomanArenaNew via FlaxEngine');
+              FlaxEngine.Level.LoadScene('RomanArenaNew');
+              FlaxEngine.Level.LoadScene('Content/Scenes/RomanArenaNew.scene');
+              return;
+            }
+          }catch(e){ console.log('FlaxEngine load failed',e); }
+          try{
+            if(typeof Module!=='undefined' && Module.cwrap){
+              var load = Module.cwrap('LoadScene', null, ['string']);
+              if(load){ load('RomanArenaNew'); console.log('[Web Arena] cwrap RomanArenaNew'); return; }
+            }
+          }catch(e){}
+          if(tries<30) setTimeout(tryLoad, 1000);
+        }
+        var orig = Module['onRuntimeInitialized'];
+        Module['onRuntimeInitialized'] = function(){
+          if(orig) try{ orig(); }catch(e){}
+          setTimeout(tryLoad, 1500);
+        };
+      })();
     </script>
     <script async type="text/javascript" src="FlaxGame.js"></script>
   </body>

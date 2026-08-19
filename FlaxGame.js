@@ -200,11 +200,13 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
   }
 })();
 // end include: C:\Flax/FlaxEngine/Cache/Intermediate/FlaxGame/Web/x86/Development/check_browser_version.js
-// include: C:\Flax\FlaxEngine/Source/Platforms/Web/Binaries/Data/check_jspi.js
+// include: C:\Flax\FlaxEngine/Source/Platforms/Web/Binaries/Data/check_jspi.js — PATCHED for Edge (was blocking)
+// Flax Web originally required JSPI (WebAssembly.Suspending) which is Chrome-only Origin Trial.
+// Edge/Firefox don't have it — now we warn but continue; the Wasm will use fallback sync path.
 if (!('Suspending' in WebAssembly)) {
   console.log(navigator.userAgent);
-  alert(`JSPI is not supported in this browser.`)
-  throw new Error(`JSPI is not supported in this browser.`);
+  console.warn(`JSPI not supported in this browser — continuing with sync fallback (Edge/Firefox). Some async may be slower.`);
+  // alert + throw removed for Edge compat
 }
 // end include: C:\Flax\FlaxEngine/Source/Platforms/Web/Binaries/Data/check_jspi.js
 
@@ -15174,9 +15176,13 @@ changes have the same license
         for (let [x, original] of Object.entries(imports)) {
           if (typeof original == 'function') {
             let isAsyncifyImport = original.isAsync || importPattern.test(x);
-            // Wrap async imports with a suspending WebAssembly function.
+            // Wrap async imports with a suspending WebAssembly function — Edge fallback without JSPI
             if (isAsyncifyImport) {
-              imports[x] = original = new WebAssembly.Suspending(original);
+              if ('Suspending' in WebAssembly) {
+                imports[x] = original = new WebAssembly.Suspending(original);
+              } else {
+                imports[x] = original; // Edge: keep sync, no suspend
+              }
             }
           }
         }
@@ -21123,7 +21129,7 @@ var ASM_CONSTS = {
 };
 function getUserAgent() { var userAgent = typeof navigator !== 'undefined' && navigator.userAgent; if (!userAgent) return null; return stringToNewUTF8(userAgent); }
 getUserAgent.sig = 'i';
-function requestAnimationFrameLoopWithJSPI(frame) { var callback = WebAssembly.promising(getWasmTableEntry(frame)); async function tick() { var keepLooping = await callback(); if (keepLooping) requestAnimationFrame(tick); } requestAnimationFrame(tick); }
+function requestAnimationFrameLoopWithJSPI(frame) { var callback = ('promising' in WebAssembly) ? WebAssembly.promising(getWasmTableEntry(frame)) : getWasmTableEntry(frame); async function tick() { var keepLooping = await callback(); if (keepLooping) requestAnimationFrame(tick); } requestAnimationFrame(tick); }
 requestAnimationFrameLoopWithJSPI.sig = 'vi';
 
 // Imports from the Wasm binary.
